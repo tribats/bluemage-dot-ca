@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="description"
+      content="Personal website of software engineer Tristan Bates."
+    />
+    <title>bluemage.ca - uh oh</title>
+    <meta name="author" content="Tristan Bates" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="stylesheets/404.css?v=1.0" type="text/css" />
+  </head>
+
+  <body>
+    <div>👻</div>
+    <div class="gradient"></div>
+    <script type="text/javascript">
+      const flashlightMove = (e) => {
+        let gradient = document.querySelector(".gradient");
+        gradient.style.background = "none";
+        gradient.style.backgroundImage =
+          "radial-gradient(circle closest-corner at " +
+          e.clientX +
+          "px " +
+          e.clientY +
+          "px , rgba(0,0,0,0) 0%, rgba(0,0,0,.99) 10%)";
+      };
+
+      const flashlightOut = (e) => {
+        var gradient = document.querySelector(".gradient");
+        gradient.style.background = "rgba(0,0,0,.99)";
+      };
+
+      document.addEventListener("mousemove", flashlightMove);
+      document.addEventListener("mouseout", flashlightOut);
+    </script>
+  </body>
+</html>

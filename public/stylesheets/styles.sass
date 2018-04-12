@@ -1,0 +1,150 @@
+$primary-color: #ffad00
+$accent-color: #3498db
+$text-color: #aaa
+
+@import url(https://fonts.googleapis.com/css?family=PT+Mono)
+
+html
+  box-sizing: border-box
+
+*
+  margin: 0
+  padding: 0
+
+*,
+*:before,
+*:after
+  box-sizing: inherit
+
+body
+  font: 100% "PT Mono", monospace
+  background: #000
+  margin: 15px
+
+h1,
+h2
+  color: $primary-color
+
+h1
+  font-size: 500%
+
+h2
+  text-decoration: underline
+
+body > div
+  margin-bottom: 30px
+
+body > div > h2:before
+  content: "> "
+
+p
+  color: $text-color
+  padding: 10px
+  line-height: 150%
+
+.t
+  ul
+    list-style: none
+
+  li
+    display: flex
+
+  li:last-child
+    border: 0
+
+  li p
+    display: block
+    padding: 20px
+    line-height: 1.4
+    color: $accent-color
+
+  li p:nth-child(1)
+    position: relative
+    padding-right: 25px
+    font-size: 14px
+    line-height: 2.5
+    color: #aaa
+    min-width: 140px
+
+  li p:nth-child(1):after
+    content: ""
+    position: absolute
+    top: 28px
+    right: -12px
+    display: block
+    width: 20px
+    height: 20px
+    border: 5px solid #ffad00
+    border-radius: 50%
+    background: #000
+
+  li:first-child p:nth-child(1):after
+    background: #cfc
+
+  li p:nth-child(2)
+    flex: 1
+    font-size: 24px
+    border-left: 5px solid #ffad00
+
+  li p span
+    display: block
+    margin: 5px 0 0
+    font-size: 12px
+    font-style: italic
+    color: #aaa
+
+div ul
+  margin-top: 10px
+
+a,
+a:visited,
+a:active
+  color: $accent-color
+  text-decoration: underline
+
+div.m
+  clear: both
+
+  h2
+    padding-bottom: 8px
+
+  ul
+    padding-left: 20px
+
+  li
+    padding-bottom: 10px
+
+  li > p:first-of-type::before
+    content: " - "
+
+  li > p:first-of-type
+    display: inline
+    font-style: italic
+    color: $primary-color
+    font-size: 75%
+
+  li > p:not(:first-of-type)
+    padding: 5px
+    line-height: 125%
+    font-size: 75%
+
+body div:nth-child(1) p:nth-child(2)
+  color: $accent-color
+  padding-bottom: 15px
+
+header
+  display: flex
+  align-items: center
+  flex-direction: column
+
+  h1
+    text-align: center
+
+img
+  border-radius: 50%
+  width: 100px
+  height: 100px
+  object-fit: cover
+  object-position: center
+  margin: 10px
+  border: 4px solid $accent-color
