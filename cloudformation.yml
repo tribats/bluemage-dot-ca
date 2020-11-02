@@ -7,20 +7,25 @@ Parameters:
     Type: String
     Description: Env type
     Default: prod
+
   DomainName:
     Type: String
     Description: References an existing Route53 zone. Eg. bluemage.ca
+
   HostedZoneId:
     Type: String
     Description: References an existing Route53 Zone Id for DomainName
+
   SubDomain:
     Type: String
     Description: Subdomain for referenced hosted zone
     Default: www
+
   ExistingAcmCertificate:
     Type: String
     Description: the Amazon Resource Name (ARN) of an AWS Certificate Manager (ACM) certificate.
     AllowedPattern: arn:aws:acm:.*
+
   PriceClass:
     Type: String
     Description: CloudFront price class
@@ -29,8 +34,10 @@ Parameters:
       - PriceClass_100
       - PriceClass_200
       - PriceClass_All
+
   LogPrefix:
     Type: String
+
   UserArn:
     Type: String
 
@@ -46,6 +53,7 @@ Resources:
           - Id: DeleteContentAfter7Days
             Status: Enabled
             ExpirationInDays: 7
+
   LogBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
@@ -64,6 +72,7 @@ Resources:
               - !GetAtt LogBucket.Arn
             Principal:
                 AWS: !Ref UserArn
+
   WebsiteBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -160,6 +169,7 @@ Resources:
           AliasTarget:
             HostedZoneId: !Ref HostedZoneId
             DNSName: !GetAtt WebsiteCloudfront.DomainName
+
   WebsiteRootDNSName:
     Type: AWS::Route53::RecordSetGroup
     Properties:
@@ -180,11 +190,14 @@ Outputs:
   BucketName:
     Value: !Ref WebsiteBucket
     Description: Name of S3 bucket to hold website content
+
   CloudfrontDistributionId:
     Value: !Ref WebsiteCloudfront
     Description: Cloudfront distribution ID
+
   CloudfrontEndpoint:
     Value: !GetAtt WebsiteCloudfront.DomainName
     Description: Endpoint for Cloudfront distribution
+
   WebsiteUrl:
     Value: !Sub "https://${SubDomain}.${DomainName}"
