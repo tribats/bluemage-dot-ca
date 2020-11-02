@@ -1,37 +1,41 @@
----
-AWSTemplateFormatVersion: '2010-09-09'
-Description: 'Creates a static website (S3, CloudFront and Route53 record)'
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Creates a static website (S3, CloudFront and Route53 record)
+
 Parameters:
   Env:
     Type: String
-    Description: 'Env type'
-    Default: 'prod'
+    Description: Env type
+    Default: prod
   DomainName:
     Type: String
-    Description: 'References an existing Route53 zone. Eg. bluemage.ca'
+    Description: References an existing Route53 zone. Eg. bluemage.ca
   HostedZoneId:
     Type: String
-    Description: 'References an existing Route53 Zone Id for DomainName'
+    Description: References an existing Route53 Zone Id for DomainName
   SubDomain:
     Type: String
-    Description: 'Subdomain for referenced hosted zone'
-    Default: 'www'
+    Description: Subdomain for referenced hosted zone
+    Default: www
   ExistingAcmCertificate:
     Type: String
-    Description: 'the Amazon Resource Name (ARN) of an AWS Certificate Manager (ACM) certificate.'
-    AllowedPattern: "arn:aws:acm:.*"
+    Description: the Amazon Resource Name (ARN) of an AWS Certificate Manager (ACM) certificate.
+    AllowedPattern: arn:aws:acm:.*
   PriceClass:
     Type: String
-    Description: 'CloudFront price class'
-    Default: 'PriceClass_100'
-    AllowedValues: ['PriceClass_100', 'PriceClass_200', 'PriceClass_All']
+    Description: CloudFront price class
+    Default: PriceClass_100
+    AllowedValues:
+      - PriceClass_100
+      - PriceClass_200
+      - PriceClass_All
   LogPrefix:
-    Type: "String"
+    Type: String
   UserArn:
-    Type: "String"
+    Type: String
 
 Conditions:
-  IsDev: !Equals [!Ref Env, 'dev']
+  IsDev: !Equals [!Ref Env, dev]
 
 Resources:
   LogBucket:
@@ -40,21 +44,21 @@ Resources:
       LifecycleConfiguration:
         Rules:
           - Id: DeleteContentAfter7Days
-            Status: 'Enabled'
+            Status: Enabled
             ExpirationInDays: 7
   LogBucketPolicy:
-    Type: "AWS::S3::BucketPolicy"
+    Type: AWS::S3::BucketPolicy
     Properties:
       Bucket: !Ref LogBucket
       PolicyDocument:
         Statement:
           - Sid: ListReadWriteDeleteAccess
             Action:
-              - "s3:ListBucket"
-              - "s3:GetObject"
-              - "s3:PutObject"
-              - "s3:DeleteObject"
-            Effect: "Allow"
+              - s3:ListBucket
+              - s3:GetObject
+              - s3:PutObject
+              - s3:DeleteObject
+            Effect: Allow
             Resource:
               - !Join [ "", [ !GetAtt LogBucket.Arn, "/*" ] ]
               - !GetAtt LogBucket.Arn
@@ -70,22 +74,23 @@ Resources:
         RoutingRules:
           -
             RedirectRule:
-              ReplaceKeyWith: 'index.html'
+              ReplaceKeyWith: index.html
             RoutingRuleCondition:
-              KeyPrefixEquals: '/'
+              KeyPrefixEquals: /
     DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
 
   WebsiteBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
-      Bucket: !Ref 'WebsiteBucket'
+      Bucket: !Ref WebsiteBucket
       PolicyDocument:
         Statement:
           - Sid: PublicReadForGetBucketObjects
             Effect: Allow
-            Principal: '*'
+            Principal: "*"
             Action: s3:GetObject
-            Resource: !Sub 'arn:aws:s3:::${WebsiteBucket}/*'
+            Resource: !Sub "arn:aws:s3:::${WebsiteBucket}/*"
 
   WebsiteCloudfront:
     Type: AWS::CloudFront::Distribution
@@ -93,35 +98,35 @@ Resources:
       - WebsiteBucket
     Properties:
       DistributionConfig:
-        Comment: !Sub 'Cloudfront Distribution for ${SubDomain}.${DomainName}'
+        Comment: !Sub "Cloudfront Distribution for ${SubDomain}.${DomainName}"
         Origins:
           # Use S3 website endpoint to allow S3 redirect rules
           - DomainName: !Sub "${WebsiteBucket}.s3-website-${AWS::Region}.amazonaws.com"
             Id: S3Origin
             CustomOriginConfig:
-              HTTPPort: '80'
-              HTTPSPort: '443'
+              HTTPPort: 80
+              HTTPSPort: 443
               OriginProtocolPolicy: http-only
         CustomErrorResponses:
           # Use our own custom 404 page for 404 errors and cache response for 1h
           - ErrorCode: 404
             ResponseCode: 404
-            ResponsePagePath: '/404.html'
+            ResponsePagePath: /404.html
             ErrorCachingMinTTL: 3600
           # Use custom 404 pages for missing S3 objects and cache for 5 min
           - ErrorCode: 403
             ResponseCode: 404
-            ResponsePagePath: '/404.html'
+            ResponsePagePath: /404.html
             ErrorCachingMinTTL: 300
         Enabled: true
-        HttpVersion: 'http2'
-        DefaultRootObject: 'index.html'
+        HttpVersion: http2
+        DefaultRootObject: index.html
         Logging:
-          IncludeCookies: "false"
+          IncludeCookies: false
           Bucket: !GetAtt LogBucket.DomainName
           Prefix: !Ref LogPrefix
         Aliases:
-          - !Sub '${SubDomain}.${DomainName}'
+          - !Sub "${SubDomain}.${DomainName}"
           - !Ref DomainName
         DefaultCacheBehavior:
           AllowedMethods:
@@ -134,23 +139,23 @@ Resources:
             QueryString: false
             Cookies:
               Forward: none
-          ViewerProtocolPolicy: 'redirect-to-https'
+          ViewerProtocolPolicy: redirect-to-https
         PriceClass: !Ref PriceClass
         ViewerCertificate:
           AcmCertificateArn: !Ref ExistingAcmCertificate
-          SslSupportMethod: 'sni-only'
+          SslSupportMethod: sni-only
 
   WebsiteDNSName:
     Type: AWS::Route53::RecordSetGroup
     Properties:
       HostedZoneName: !Sub "${DomainName}."
       RecordSets:
-        - Name: !Sub '${SubDomain}.${DomainName}.'
+        - Name: !Sub "${SubDomain}.${DomainName}."
           Type: A
           AliasTarget:
             HostedZoneId: !Ref HostedZoneId
             DNSName: !GetAtt WebsiteCloudfront.DomainName
-        - Name: !Sub '${SubDomain}.${DomainName}.'
+        - Name: !Sub "${SubDomain}.${DomainName}."
           Type: AAAA
           AliasTarget:
             HostedZoneId: !Ref HostedZoneId
@@ -160,12 +165,12 @@ Resources:
     Properties:
       HostedZoneName: !Sub "${DomainName}."
       RecordSets:
-        - Name: !Sub '${DomainName}.'
+        - Name: !Sub "${DomainName}."
           Type: A
           AliasTarget:
             HostedZoneId: !Ref HostedZoneId
             DNSName: !GetAtt WebsiteCloudfront.DomainName
-        - Name: !Sub '${DomainName}.'
+        - Name: !Sub "${DomainName}."
           Type: AAAA
           AliasTarget:
             HostedZoneId: !Ref HostedZoneId
@@ -174,12 +179,12 @@ Resources:
 Outputs:
   BucketName:
     Value: !Ref WebsiteBucket
-    Description: 'Name of S3 bucket to hold website content'
+    Description: Name of S3 bucket to hold website content
   CloudfrontDistributionId:
     Value: !Ref WebsiteCloudfront
-    Description: 'Cloudfront distribution ID'
+    Description: Cloudfront distribution ID
   CloudfrontEndpoint:
     Value: !GetAtt WebsiteCloudfront.DomainName
-    Description: 'Endpoint for Cloudfront distribution'
+    Description: Endpoint for Cloudfront distribution
   WebsiteUrl:
-    Value: !Sub 'https://${SubDomain}.${DomainName}'
+    Value: !Sub "https://${SubDomain}.${DomainName}"
